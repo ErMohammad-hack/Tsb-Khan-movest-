@@ -99,3 +99,82 @@ setupMove(10471336737, 12463072679, {game.ReplicatedStorage.Resources.DownSlam["
 setupMove(12510170988, 18179181663, {game.ReplicatedStorage.Resources.Fissure['DragonExplode'].Part.L})
 
 print("Script loaded with Mohammad Khan Power!")
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local hotbar = playerGui:WaitForChild("Hotbar"):WaitForChild("Backpack"):WaitForChild("Hotbar")
+
+local button4 = hotbar:FindFirstChild("4")
+if not button4 then
+    warn("Button 4 not found!")
+    return
+end
+
+local cooldown = false
+
+-- Clone button 4 to button 5
+local button5 = button4:Clone()
+button5.Name = "5"
+button5.Parent = hotbar
+button5.Position = button4.Position + UDim2.new(0, button4.Size.X.Offset + 5, 0, 0)
+button5.Base.ToolName.Text = "SpeedBurst"
+
+local function setCooldownVisual(active)
+    if active then
+        button5.Base.BackgroundColor3 = Color3.fromRGB(150, 150, 150) -- gray out
+        button5.Base.ToolName.Text = "Cooldown"
+    else
+        button5.Base.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        button5.Base.ToolName.Text = "SpeedBurst"
+    end
+end
+
+button5.Base.MouseButton1Click:Connect(function()
+    if cooldown then
+        warn("Move on cooldown!")
+        return
+    end
+
+    cooldown = true
+    setCooldownVisual(true)
+
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+
+    if humanoid then
+        local originalSpeed = humanoid.WalkSpeed
+        humanoid.WalkSpeed = originalSpeed * 10  -- 10x speed
+
+        -- Aura effect
+        local aura = Instance.new("ParticleEmitter")
+        aura.Texture = "rbxassetid://248625108" -- Example aura texture
+        aura.Rate = 200
+        aura.Lifetime = NumberRange.new(0.5)
+        aura.Speed = NumberRange.new(1, 3)
+        aura.Size = NumberSequence.new(1.5)
+        aura.Parent = character:FindFirstChild("HumanoidRootPart")
+
+        -- Play custom run animation
+        local anim = Instance.new("Animation")
+        anim.AnimationId = "rbxassetid://913376220" -- Replace with your preferred running animation ID
+        local track = humanoid:LoadAnimation(anim)
+        track:Play()
+
+        -- Clean aura after 10 seconds
+        game:GetService("Debris"):AddItem(aura, 10)
+
+        -- Wait for 10 seconds duration
+        task.wait(10)
+
+        -- Reset speed and stop animation
+        humanoid.WalkSpeed = originalSpeed
+        track:Stop()
+
+        -- Start cooldown for 1 second
+        task.wait(1)
+        cooldown = false
+        setCooldownVisual(false)
+        print("SpeedBurst ready again!")
+    else
+        warn("Humanoid not found!")
+    end
+end)
